@@ -1,0 +1,33 @@
+﻿{
+  "data": {
+    "User_viewer": {
+      "me": {
+        "id": "8549ebcb-4847-4423-a0f0-81c6eb21aa34",
+        "baseName": "Lucas Teske",  
+        "myBoolField": true,
+        "myIntField": 12345,
+        "myFloatField": 12345.33,
+        "myDateField": "2012-04-23T18:25:43.511Z",
+        "avatar": {
+          "name": "avatar",
+          "images": [
+            {
+              "gid": "SW1hZ2VEYXRhOg==",
+              "url": "https://www.gravatar.com/avatar/a79572b3a43fecf1850fe1074f5186cd?s=200",
+              "size": "medium"
+            }
+          ]
+        },
+        "addresses": [],
+        "email": "lucas@teske.com.br",
+        "taxId": "12341234123",
+        "keyAliases": [
+          "lucasteske",
+          "huebr",
+          "brbr2"
+        ],
+        "verifications": []
+      }
+    }
+  }
+}
