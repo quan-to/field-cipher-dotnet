@@ -47,7 +47,12 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="example.json" />
-    <EmbeddedResource Include="testkey.gpg" />
+    <EmbeddedResource Include="..\test-pkey.pub">
+      <Link>test-pkey.pub</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\test-pkey.sec">
+      <Link>test-pkey.sec</Link>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

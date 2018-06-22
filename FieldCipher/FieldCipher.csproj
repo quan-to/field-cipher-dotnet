@@ -41,12 +41,16 @@
     <Compile Include="Decipher.cs" />
     <Compile Include="GPGTools.cs" />
     <Compile Include="Tools.cs" />
+    <Compile Include="Exceptions\NoKeyAvailableException.cs" />
+    <Compile Include="Models\GPGDecryptedDataReturn.cs" />
+    <Compile Include="Models\UnmatchedFields.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Exceptions\" />
+    <Folder Include="Models\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
