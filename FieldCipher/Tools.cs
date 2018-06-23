@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace FieldCipher {
+namespace ContaQuanto.FieldCipher {
     public static class Tools {
 
         public static readonly string MAGIC = "FCMN";

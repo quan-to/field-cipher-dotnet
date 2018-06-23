@@ -2,18 +2,15 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using System.Text;
-using FieldCipher;
-using Newtonsoft.Json;
+using ContaQuanto.FieldCipher;
 using Newtonsoft.Json.Linq;
-using Org.BouncyCastle.Security;
 
-namespace FieldCipherExample {
+namespace Quanto.FieldCipherExample {
     class MainClass {
 
         public static string LoadEmbeddedResource(string name) {
             var assembly = Assembly.GetExecutingAssembly();
-            var resourceName = $"FieldCipherExample.{name}";
+            var resourceName = $"ContaQuanto.FieldCipherExample.{name}";
             var resources = assembly.GetManifestResourceNames();
             using (Stream stream = assembly.GetManifestResourceStream(resourceName))
             using (StreamReader reader = new StreamReader(stream)) {
@@ -63,20 +60,6 @@ namespace FieldCipherExample {
             Console.WriteLine("Changes: ");
             dec.UnmatchedFields.ForEach((c) => Console.WriteLine($"\t{c.Expected} => {c.Got}"));
             Console.WriteLine(dec.DecryptedData);
-
-            /*
-            var decipher = new Decipher(testKeySec);
-            if (!decipher.Unlock("1234567890")) {
-                Console.WriteLine("Error decrypting key");
-            }
-
-            var decrypted = decipher.DecryptJsonFields(encrypted, key);
-            Console.WriteLine(decrypted);
-
-
-            var decrypted2 = decipher.DecryptJsonFields(encrypted, key);
-            Console.WriteLine(decrypted2);
-            */
         }
     }
 }

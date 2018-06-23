@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using FieldCipher.Models;
+using ContaQuanto.FieldCipher.Models;
 using Newtonsoft.Json.Linq;
 using Org.BouncyCastle.Bcpg;
 using Org.BouncyCastle.Bcpg.OpenPgp;
@@ -13,7 +13,7 @@ using Org.BouncyCastle.Crypto.Paddings;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Security;
 
-namespace FieldCipher {
+namespace ContaQuanto.FieldCipher {
     public class Cipher {
 
         static readonly Dictionary<JTokenType, string> JTokenType2String = new Dictionary<JTokenType, string> {

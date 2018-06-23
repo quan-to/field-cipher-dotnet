@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using FieldCipher.Models;
+using ContaQuanto.FieldCipher.Models;
 using Newtonsoft.Json.Linq;
 using Org.BouncyCastle.Bcpg.OpenPgp;
 using Org.BouncyCastle.Crypto.Engines;
@@ -12,7 +12,7 @@ using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Paddings;
 using Org.BouncyCastle.Crypto.Parameters;
 
-namespace FieldCipher {
+namespace ContaQuanto.FieldCipher {
     public class Decipher {
         const string FieldRegex = @"\((.*)\)\[(.*)\](.*)";
 

@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using FieldCipher.Exceptions;
-using FieldCipher.Models;
+using ContaQuanto.FieldCipher.Exceptions;
+using ContaQuanto.FieldCipher.Models;
 using Org.BouncyCastle.Bcpg;
 using Org.BouncyCastle.Bcpg.OpenPgp;
 using Org.BouncyCastle.Security;
 
-namespace FieldCipher {
+namespace ContaQuanto.FieldCipher {
     public static class GPGTools {
         public static PgpPublicKey LoadPublicKeyFromString(string key) {
             using (Stream s = Tools.GenerateStreamFromString(key)) {

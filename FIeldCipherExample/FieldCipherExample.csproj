@@ -5,7 +5,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{6716C09A-91C7-4803-8CDD-65AB3D48FFE0}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>FieldCipherExample</RootNamespace>
+    <RootNamespace>ContaQuanto.FieldCipherExample</RootNamespace>
     <AssemblyName>FIeldCipherExample</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
   </PropertyGroup>
