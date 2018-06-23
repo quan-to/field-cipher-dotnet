@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
+using FieldCipher.Models;
 using Newtonsoft.Json.Linq;
 using Org.BouncyCastle.Bcpg;
 using Org.BouncyCastle.Bcpg.OpenPgp;
@@ -22,23 +24,42 @@ namespace FieldCipher {
             {JTokenType.Date, "date"}
         };
 
-        readonly PgpPublicKey key;
+        readonly List<PgpPublicKey> keys;
         readonly SecureRandom sr;
 
-        public Cipher(string gpgPubKey) {
-            key = GPGTools.LoadPublicKeyFromString(gpgPubKey);
-            if (key == null) {
-                throw new InvalidKeyException("Invalid key provided");
-            }
+        public Cipher(List<string> gpgPubKey) {
+            keys = gpgPubKey.Select((a) => GPGTools.LoadPublicKeyFromString(a)).ToList();
             sr = new SecureRandom();
         }
 
-        public Cipher(PgpPublicKey key) {
-            this.key = key;
+        public Cipher(List<PgpPublicKey> keys) {
+            this.keys = new List<PgpPublicKey>();
+            keys.ForEach(this.keys.Add);
         }
 
-        public string EncryptToBase64(byte[] data, string filename = "encrypted-data.gpg") {
-            return Convert.ToBase64String(Encrypt(data, filename));
+        public FieldCipherPacket GenerateEncryptedPacket(JObject json, List<string> skipFields) {
+            // region Generate Random Key
+            byte[] key = new byte[32];
+            sr.NextBytes(key);
+            // endregion
+            // region Encrypt Everything
+            var encJson = EncryptJsonFields(json.ToString(), key, skipFields);
+            var encKey = PGPEncryptToBase64(key, "field-cipher-key.gpg");
+            // endregion
+            // region Do the best to clear the memory
+            for (int i = 0; i < 32; i ++) {
+                key[i] = 0;
+            }
+            key = null;
+            // endregion
+            return new FieldCipherPacket {
+                EncryptedKey = encKey,
+                EncryptedJSON = encJson,
+            };
+        }
+
+        public string PGPEncryptToBase64(byte[] data, string filename = "encrypted-data.gpg") {
+            return Convert.ToBase64String(GPGTools.EncryptForKeys(data, keys, filename));
         }
 
         public JObject EncryptJsonFields(string json, byte[] baseKey, List<string> skipFields = null) {
@@ -75,6 +96,7 @@ namespace FieldCipher {
 
         JObject EncryptJsonFields(JObject obj, byte[] baseKey, string currentLevel = "/", List<string> skipFields = null) {
             skipFields = skipFields ?? new List<string>();
+            var ob = new JObject();
             foreach (var prop in obj.Properties()) {
                 var nodePath = $"{currentLevel}{Tools.SimpleB64(prop.Name)}/";
                 if (skipFields.IndexOf(nodePath) > -1) {
@@ -83,15 +105,15 @@ namespace FieldCipher {
                 var o = obj[prop.Name];
                 switch (o.Type) {
                     case JTokenType.Object:
-                        obj[prop.Name] = EncryptJsonFields((JObject)o, baseKey, nodePath, skipFields);
+                        ob[prop.Name] = EncryptJsonFields((JObject)o, baseKey, nodePath, skipFields);
                         break;
                     default:
-                        obj[prop.Name] = EncryptNode(o, baseKey, nodePath, skipFields);
+                        ob[prop.Name] = EncryptNode(o, baseKey, nodePath, skipFields);
                         break;
                 }
             }
 
-            return obj;
+            return ob;
         }
 
         string AESEncrypt(byte[] data, byte[] baseKey) {
@@ -116,46 +138,15 @@ namespace FieldCipher {
             return $"{Tools.MAGIC}{Convert.ToBase64String(o, 0, o.Length)}";
         }
 
-        string EncryptToASCIIArmored(byte[] data, string filename = "encrypted-data.gpg") {
+        string PGPEncryptToASCIIArmored(byte[] data, string filename = "encrypted-data.gpg") {
             using (var encOut = new MemoryStream()) {
-                var byteData = Encrypt(data, filename);
+                var byteData = GPGTools.EncryptForKeys(data, keys, filename);
                 var s = new ArmoredOutputStream(encOut);
                 s.Write(byteData, 0, byteData.Length);
                 s.Close();
                 encOut.Seek(0, SeekOrigin.Begin);
                 var reader = new StreamReader(encOut);
                 return reader.ReadToEnd();
-            }
-        }
-
-        byte[] Encrypt(byte[] data, string filename = "encrypted-data.gpg") {
-            using (MemoryStream encOut = new MemoryStream(), bOut = new MemoryStream()) {
-                // region Compression
-                var comData = new PgpCompressedDataGenerator(CompressionAlgorithmTag.Zip);
-                var cos = comData.Open(bOut);
-                var lData = new PgpLiteralDataGenerator();
-                var pOut = lData.Open(
-                    cos,
-                    PgpLiteralData.Binary,
-                    filename,
-                    data.Length,
-                    DateTime.UtcNow
-                );
-
-                pOut.Write(data, 0, data.Length);
-                lData.Close();
-                comData.Close();
-                byte[] bytes = bOut.ToArray();
-                // endregion
-                // region Encryption
-                var cPk = new PgpEncryptedDataGenerator(SymmetricKeyAlgorithmTag.Aes256, true, new SecureRandom());
-                cPk.AddMethod(key);
-                var cOut = cPk.Open(encOut, bytes.Length);
-                cOut.Write(bytes, 0, bytes.Length);  // obtain the actual bytes from the compressed stream
-                cOut.Close();
-                encOut.Seek(0, SeekOrigin.Begin);
-                return encOut.ToArray();
-                // endregion
             }
         }
     }

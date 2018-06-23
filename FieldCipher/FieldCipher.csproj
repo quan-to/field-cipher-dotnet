@@ -44,6 +44,8 @@
     <Compile Include="Exceptions\NoKeyAvailableException.cs" />
     <Compile Include="Models\GPGDecryptedDataReturn.cs" />
     <Compile Include="Models\UnmatchedFields.cs" />
+    <Compile Include="Models\FieldCipherPacket.cs" />
+    <Compile Include="Models\FieldDecipherPacket.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security;
 using System.Text;
 using System.Text.RegularExpressions;
-using FieldCipher.Exceptions;
 using FieldCipher.Models;
 using Newtonsoft.Json.Linq;
 using Org.BouncyCastle.Bcpg.OpenPgp;
@@ -37,9 +35,22 @@ namespace FieldCipher {
             }
         }
 
-        public JObject DecryptJsonFields(JObject input, byte[] baseKey) {
-            List<UnmatchedFields> unmatched = new List<UnmatchedFields>(); // TODO: Return this
-            return DecryptJsonFields(input, baseKey, unmatched, "/");
+        public FieldDecipherPacket DecipherPacket(FieldCipherPacket packet) {
+            var encryptedKey = Convert.FromBase64String(packet.EncryptedKey);
+            var keyData = GPGTools.Decrypt(encryptedKey, key);
+            var baseKey = Convert.FromBase64String(keyData.Base64Data);
+
+            var encryptedJson = packet.EncryptedJSON;
+            var result = DecryptJsonFields(encryptedJson, baseKey);
+            return new FieldDecipherPacket {
+                UnmatchedFields = result.Item2,
+                DecryptedData = result.Item1,
+            };
+        }
+
+        public Tuple<JObject, List<UnmatchedFields>> DecryptJsonFields(JObject input, byte[] baseKey) {
+            List<UnmatchedFields> unmatched = new List<UnmatchedFields>();
+            return new Tuple<JObject, List<UnmatchedFields>>(DecryptJsonFields(input, baseKey, unmatched, "/"), unmatched);
         }
 
         JToken DecryptArray(JToken token, byte[] baseKey, string currentLevel, List<UnmatchedFields> unmatchedFields) {
@@ -90,7 +101,6 @@ namespace FieldCipher {
             if (expectedPath != path) {
                 var i = Tools.UncipherPath(expectedPath);
                 var o = Tools.UncipherPath(path);
-                Console.WriteLine($"Path Mistmatch. Expected: \n{i}; Got\n{o}");
                 unmatchedFields.Add(new UnmatchedFields {
                     Expected = i,
                     Got = o,
@@ -143,66 +153,6 @@ namespace FieldCipher {
             }
 
             return ob;
-        }
-
-        GPGDecryptedDataReturn Decrypt(string data) {
-            using (var stream = PgpUtilities.GetDecoderStream(Tools.GenerateStreamFromString(data))) {
-                var pgpF = new PgpObjectFactory(stream);
-                var o = pgpF.NextPgpObject();
-                var enc = o as PgpEncryptedDataList;
-                if (enc == null) {
-                    enc = (PgpEncryptedDataList)pgpF.NextPgpObject();
-                }
-
-                PgpPublicKeyEncryptedData pbe = null;
-                string lastFingerPrint = "None";
-                foreach (PgpPublicKeyEncryptedData pked in enc.GetEncryptedDataObjects()) {
-                    if (pked.KeyId == key.KeyId) {
-                        pbe = pked;
-                        break;
-                    }
-                }
-
-                if (pbe == null) {
-                    throw new NoKeyAvailableException("There is no payload that matches loaded key.");
-                }
-
-                var clear = pbe.GetDataStream(key);
-                var plainFact = new PgpObjectFactory(clear);
-                var message = plainFact.NextPgpObject();
-                var outData = new GPGDecryptedDataReturn {
-                    FingerPrint = lastFingerPrint,
-                };
-                if (message is PgpCompressedData cData) {
-                    var pgpFact = new PgpObjectFactory(cData.GetDataStream());
-                    message = pgpFact.NextPgpObject();
-                }
-
-                if (message is PgpLiteralData ld) {
-                    outData.Filename = ld.FileName;
-                    var iss = ld.GetInputStream();
-                    byte[] buffer = new byte[iss.Length];
-                    using (var ms = new MemoryStream()) {
-                        int read;
-                        while ((read = iss.Read(buffer, 0, buffer.Length)) > 0) {
-                            ms.Write(buffer, 0, read);
-                        }
-                        outData.Base64Data = Convert.ToBase64String(ms.ToArray());
-                    }
-                } else if (message is PgpOnePassSignatureList) {
-                    throw new PgpException("Encrypted message contains a signed message - not literal data.");
-                } else {
-                    throw new PgpException("Message is not a simple encrypted file - type unknown.");
-                }
-
-                outData.IsIntegrityProtected = pbe.IsIntegrityProtected();
-
-                if (outData.IsIntegrityProtected) {
-                    outData.IsIntegrityOK = pbe.Verify();
-                }
-
-                return outData;
-            }
         }
     }
 }
