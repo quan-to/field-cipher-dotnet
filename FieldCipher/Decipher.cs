@@ -26,6 +26,16 @@ namespace ContaQuanto.FieldCipher {
             matcher = new Regex(FieldRegex, RegexOptions.IgnoreCase);
         }
 
+        public Decipher(PgpSecretKey gpgPrivateKey) {
+            secret = gpgPrivateKey;
+            matcher = new Regex(FieldRegex, RegexOptions.IgnoreCase);
+        }
+
+        public Decipher(PgpPrivateKey gpgPrivateKey) {
+            key = gpgPrivateKey;
+            matcher = new Regex(FieldRegex, RegexOptions.IgnoreCase);
+        }
+
         public bool Unlock(string password) {
             try {
                 key = secret.ExtractPrivateKey(password.ToCharArray());
